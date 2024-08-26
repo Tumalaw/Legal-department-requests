@@ -32,23 +32,48 @@
         th {
             background-color: #f3f4f6;
         }
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo img {
+            max-width: 200px; /* Adjust this value to resize the logo */
+        }
+        .section-title {
+            margin-top: 40px;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .info-message {
+            background-color: #e5e7eb;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <div class="logo">
+            <img src="Image.png" alt="Tuma Law Logo">
+        </div>
         <h1 class="text-2xl font-bold mb-4">Legal Department Task Assignment Tracker</h1>
+        <div class="info-message">
+            Routine requests will be addressed within 3 business days.
+        </div>
         <form id="taskForm" class="mb-4">
             <div class="mb-4">
                 <label for="requestor" class="block">Requestor's Name:</label>
                 <input type="text" id="requestor" class="border rounded w-full p-2" required>
             </div>
             <div class="mb-4">
-                <label for="assignedTo" class="block">Assigned To:</label>
-                <input type="text" id="assignedTo" class="border rounded w-full p-2" required>
-            </div>
-            <div class="mb-4">
                 <label for="actionType" class="block">Type of Action Requested:</label>
-                <input type="text" id="actionType" class="border rounded w-full p-2" required>
+                <select id="actionType" class="border rounded w-full p-2" required>
+                    <option value="">Select Action Type</option>
+                    <option value="Contract Review">Contract Review</option>
+                    <option value="Litigation">Litigation</option>
+                    <option value="Legal Advice">Legal Advice</option>
+                </select>
             </div>
             <div class="mb-4">
                 <label for="requestDate" class="block">Request Date:</label>
@@ -74,107 +99,113 @@
                     <option value="complete">Complete</option>
                 </select>
             </div>
+            <div class="mb-4">
+                <label for="timestamp" class="block">Request Timestamp:</label>
+                <input type="text" id="timestamp" class="border rounded w-full p-2" readonly>
+            </div>
             <button type="submit" class="bg-blue-500 text-white rounded p-2">Add Task</button>
         </form>
-        <table id="taskTable">
-            <thead>
-                <tr>
-                    <th>Requestor</th>
-                    <th>Assigned To</th>
-                    <th>Action Requested</th>
-                    <th>Request Date</th>
-                    <th>Due Date</th>
-                    <th>Response Time</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Task entries will be added here -->
-            </tbody>
-        </table>
+
+        <div>
+            <h2 class="section-title">Ongoing Requests</h2>
+            <table id="ongoingRequestsTable">
+                <thead>
+                    <tr>
+                        <th>Requestor</th>
+                        <th>Action Requested</th>
+                        <th>Request Date</th>
+                        <th>Due Date</th>
+                        <th>Response Time</th>
+                        <th>Status</th>
+                        <th>Request Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Ongoing requests will be added here -->
+                </tbody>
+            </table>
+        </div>
+
+        <div>
+            <h2 class="section-title">Completed Requests</h2>
+            <table id="completedRequestsTable">
+                <thead>
+                    <tr>
+                        <th>Requestor</th>
+                        <th>Action Requested</th>
+                        <th>Request Date</th>
+                        <th>Due Date</th>
+                        <th>Response Time</th>
+                        <th>Status</th>
+                        <th>Request Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Completed requests will be added here -->
+                </tbody>
+            </table>
+        </div>
     </div>
+
     <script>
         document.getElementById('taskForm').addEventListener('submit', function(event) {
             event.preventDefault(); // Prevent form submission
-            
+
             const requestor = document.getElementById('requestor').value;
-            const assignedTo = document.getElementById('assignedTo').value;
             const actionType = document.getElementById('actionType').value;
             const requestDate = document.getElementById('requestDate').value;
             const dueDate = document.getElementById('dueDate').value;
             const responseTime = document.getElementById('responseTime').value;
             const status = document.getElementById('status').value;
-            
+
+            // Get the current date and time for the timestamp
+            const currentDateTime = new Date();
+            const timestamp = currentDateTime.toLocaleString();
+
+            // Store task in local storage
             let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-            tasks.push({ requestor, assignedTo, actionType, requestDate, dueDate, responseTime, status });
+            tasks.push({ requestor, actionType, requestDate, dueDate, responseTime, status, timestamp });
             localStorage.setItem('tasks', JSON.stringify(tasks));
-            addTaskToTable(tasks.length - 1, { requestor, assignedTo, actionType, requestDate, dueDate, responseTime, status });
+
+            // Add task to the appropriate table based on status
+            if (status === 'complete') {
+                addTaskToTable('completedRequestsTable', tasks.length - 1, { requestor, actionType, requestDate, dueDate, responseTime, status, timestamp });
+            } else {
+                addTaskToTable('ongoingRequestsTable', tasks.length - 1, { requestor, actionType, requestDate, dueDate, responseTime, status, timestamp });
+            }
+
             this.reset(); // Clear the form after submission
         });
 
         // Load tasks from local storage when the page loads
         window.onload = function() {
             const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-            tasks.forEach((task, index) => addTaskToTable(index, task));
+            tasks.forEach((task, index) => {
+                if (task.status === 'complete') {
+                    addTaskToTable('completedRequestsTable', index, task);
+                } else {
+                    addTaskToTable('ongoingRequestsTable', index, task);
+                }
+            });
+
+            // Automatically populate the timestamp field
+            const currentDateTime = new Date();
+            document.getElementById('timestamp').value = currentDateTime.toLocaleString();
         };
 
-        // Add task to the table
-        function addTaskToTable(index, task) {
-            const table = document.getElementById('taskTable').getElementsByTagName('tbody')[0];
+        // Add task to the correct table
+        function addTaskToTable(tableId, index, task) {
+            const table = document.getElementById(tableId).getElementsByTagName('tbody')[0];
             const newRow = table.insertRow();
             newRow.innerHTML = `
                 <td>${task.requestor}</td>
-                <td>${task.assignedTo}</td>
                 <td>${task.actionType}</td>
                 <td>${task.requestDate}</td>
                 <td>${task.dueDate}</td>
                 <td>${task.responseTime}</td>
                 <td>${task.status}</td>
-                <td>
-                    <button onclick="editTask(${index})" class="bg-yellow-500 text-white rounded p-1">Edit</button>
-                    <button onclick="deleteTask(${index})" class="bg-red-500 text-white rounded p-1">Delete</button>
-                </td>
+                <td>${task.timestamp}</td>
             `;
-        }
-
-        // Edit task function
-        function editTask(index) {
-            const tasks = JSON.parse(localStorage.getItem('tasks'));
-            const task = tasks[index];
-
-            document.getElementById('requestor').value = task.requestor;
-            document.getElementById('assignedTo').value = task.assignedTo;
-            document.getElementById('actionType').value = task.actionType;
-            document.getElementById('requestDate').value = task.requestDate;
-            document.getElementById('dueDate').value = task.dueDate;
-            document.getElementById('responseTime').value = task.responseTime;
-            document.getElementById('status').value = task.status;
-
-            // Remove the task from the array and update local storage
-            tasks.splice(index, 1);
-            localStorage.setItem('tasks', JSON.stringify(tasks));
-
-            // Remove the task from the table
-            const table = document.getElementById('taskTable').getElementsByTagName('tbody')[0];
-            table.deleteRow(index);
-        }
-
-        // Delete task function
-        function deleteTask(index) {
-            let tasks = JSON.parse(localStorage.getItem('tasks'));
-
-            // Remove the task from the array and update local storage
-            tasks.splice(index, 1);
-            localStorage.setItem('tasks', JSON.stringify(tasks));
-
-            // Remove the task from the table
-            const table = document.getElementById('taskTable').getElementsByTagName('tbody')[0];
-            table.deleteRow(index);
-
-            // Reload the table to update the row indexes
-            table.innerHTML = '';
-            tasks.forEach((task, i) => addTaskToTable(i, task));
         }
     </script>
 </body>
