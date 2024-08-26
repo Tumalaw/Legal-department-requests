@@ -1,0 +1,132 @@
+<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>Legal Department Task Assignment Tracker</title>  
+    <script src="https://cdn.tailwindcss.com"></script>  
+    <style>  
+        body {  
+            font-family: Arial, sans-serif;  
+            background-color: #f9fafb;  
+            padding: 20px;  
+        }  
+        .container {  
+            max-width: 800px;  
+            margin: auto;  
+            background: white;  
+            padding: 20px;  
+            border-radius: 8px;  
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);  
+        }  
+        table {  
+            width: 100%;  
+            border-collapse: collapse;  
+            margin-top: 20px;  
+        }  
+        th, td {  
+            padding: 12px;  
+            border: 1px solid #e5e7eb;  
+            text-align: left;  
+        }  
+        th {  
+            background-color: #f3f4f6;  
+        }  
+        tbody tr:hover {  
+            background-color: #f1f5f9; /* Light gray background on hover */  
+        }  
+    </style>  
+</head>  
+<body>  
+    <div class="container">  
+        <h1 class="text-2xl font-bold mb-4">Legal Department Task Assignment Tracker</h1>  
+        <form id="taskForm" class="mb-4">  
+            <div class="mb-4">  
+                <label for="requestor" class="block">Requestor's Name:</label>  
+                <input type="text" id="requestor" class="border rounded w-full p-2" required>  
+            </div>  
+            <div class="mb-4">  
+                <label for="assignedTo" class="block">Assigned To:</label>  
+                <input type="text" id="assignedTo" class="border rounded w-full p-2" required>  
+            </div>  
+            <div class="mb-4">  
+                <label for="actionType" class="block">Type of Action Requested:</label>  
+                <input type="text" id="actionType" class="border rounded w-full p-2" placeholder="e.g., Draft a letter to a vendor" required>  
+            </div>  
+            <div class="mb-4">  
+                <label for="requestDate" class="block">Request Date:</label>  
+                <input type="date" id="requestDate" class="border rounded w-full p-2" required>  
+            </div>  
+            <div class="mb-4">  
+                <label for="dueDate" class="block">Due Date:</label>  
+                <input type="date" id="dueDate" class="border rounded w-full p-2" required>  
+            </div>  
+            <div class="mb-4">  
+                <label for="responseTime" class="block">Time for Response:</label>  
+                <select id="responseTime" class="border rounded w-full p-2" required>  
+                    <option value="immediate">Immediate</option>  
+                    <option value="routine">Routine</option>  
+                    <option value="specified">Specified Date</option>  
+                </select>  
+            </div>  
+            <div class="mb-4">  
+                <label for="status" class="block">Status:</label>  
+                <select id="status" class="border rounded w-full p-2" required>  
+                    <option value="sent">Sent</option>  
+                    <option value="received">Received</option>  
+                    <option value="in-progress">In Progress</option>  
+                    <option value="complete">Complete</option>  
+                </select>  
+            </div>  
+            <button type="submit" class="bg-blue-500 text-white rounded p-2">Add Task</button>  
+        </form>  
+        <table id="taskTable">  
+            <thead>  
+                <tr>  
+                    <th>Requestor</th>  
+                    <th>Assigned To</th>  
+                    <th>Action Requested</th>  
+                    <th>Request Date</th>  
+                    <th>Due Date</th>  
+                    <th>Response Time</th>  
+                    <th>Status</th>  
+                </tr>  
+            </thead>  
+            <tbody>  
+                <!-- Task entries will be added here -->  
+            </tbody>  
+        </table>  
+    </div>  
+    <script>  
+        document.getElementById('taskForm').addEventListener('submit', function(event) {  
+            event.preventDefault();  
+            const requestor = document.getElementById('requestor').value;  
+            const assignedTo = document.getElementById('assignedTo').value;  
+            const actionType = document.getElementById('actionType').value;  
+            const requestDate = document.getElementById('requestDate').value;  
+            const dueDate = document.getElementById('dueDate').value;  
+            const responseTime = document.getElementById('responseTime').value;  
+            const status = document.getElementById('status').value;  
+
+            if (new Date(dueDate) < new Date(requestDate)) {  
+                alert("Due Date must be after Request Date.");  
+                return;  
+            }  
+
+            const table = document.getElementById('taskTable').getElementsByTagName('tbody')[0];  
+            const newRow = table.insertRow();  
+            newRow.innerHTML = `  
+                <td>${requestor}</td>  
+                <td>${assignedTo}</td>  
+                <td>${actionType}</td>  
+                <td>${requestDate}</td>  
+                <td>${dueDate}</td>  
+                <td>${responseTime}</td>  
+                <td>${status}</td>  
+            `;  
+
+            this.reset(); // Clear the form after submission  
+        });  
+    </script>  
+</body>  
+</html>
