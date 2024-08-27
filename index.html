@@ -195,35 +195,36 @@
             tasks.push({ requestor, actionType, details, requestDate, dueDate, responseTime, status, timestamp });
             localStorage.setItem('tasks', JSON.stringify(tasks));
 
-            // Add task to the appropriate table based on status
-            if (status === 'complete') {
-                addTaskToTable('completedRequestsTable', tasks.length - 1, { requestor, actionType, details, requestDate, dueDate, responseTime, status, timestamp });
-            } else {
-                addTaskToTable('ongoingRequestsTable', tasks.length - 1, { requestor, actionType, details, requestDate, dueDate, responseTime, status, timestamp });
-            }
+            // Reload the table after submission
+            loadTasks();
 
             this.reset(); // Clear the form after submission
         });
 
         // Load tasks from local storage when the page loads
         window.onload = function() {
-            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-            tasks.forEach((task, index) => {
-                if (task.status === 'complete') {
-                    addTaskToTable('completedRequestsTable', index, task);
-                } else {
-                    addTaskToTable('ongoingRequestsTable', index, task);
-                }
-            });
-
-            // Automatically populate the timestamp field
-            const currentDateTime = new Date();
-            document.getElementById('timestamp').value = currentDateTime.toLocaleString();
+            loadTasks();
         };
 
+        function loadTasks() {
+            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+            const ongoingTable = document.getElementById('ongoingRequestsTable').getElementsByTagName('tbody')[0];
+            const completedTable = document.getElementById('completedRequestsTable').getElementsByTagName('tbody')[0];
+            ongoingTable.innerHTML = '';
+            completedTable.innerHTML = '';
+
+            tasks.forEach((task, index) => {
+                if (task.status === 'complete') {
+                    addTaskToTable(completedTable, index, task);
+                } else {
+                    addTaskToTable(ongoingTable, index, task);
+                }
+            });
+        }
+
         // Add task to the correct table
-        function addTaskToTable(tableId, index, task) {
-            const table = document.getElementById(tableId).getElementsByTagName('tbody')[0];
+        function addTaskToTable(table, index, task) {
             const newRow = table.insertRow();
             newRow.innerHTML = `
                 <td>${task.requestor}</td>
@@ -259,9 +260,8 @@
             tasks.splice(index, 1);
             localStorage.setItem('tasks', JSON.stringify(tasks));
 
-            // Remove the task from the table
-            const table = document.getElementById('taskTable').getElementsByTagName('tbody')[0];
-            table.deleteRow(index);
+            // Reload the table
+            loadTasks();
         }
 
         // Delete task function
@@ -272,37 +272,21 @@
             tasks.splice(index, 1);
             localStorage.setItem('tasks', JSON.stringify(tasks));
 
-            // Remove the task from the table
-            const table = document.getElementById('taskTable').getElementsByTagName('tbody')[0];
-            table.deleteRow(index);
-
-            // Reload the table to update the row indexes
-            table.innerHTML = '';
-            tasks.forEach((task, i) => addTaskToTable(i, task));
+            // Reload the table
+            loadTasks();
         }
 
         // Update status function
         function updateStatus(index) {
-            const tasks = JSON.parse(localStorage.getItem('tasks'));
+            let tasks = JSON.parse(localStorage.getItem('tasks'));
             const newStatus = prompt("Update the status (sent, received, in-progress, complete):", tasks[index].status);
 
             if (newStatus && ['sent', 'received', 'in-progress', 'complete'].includes(newStatus.toLowerCase())) {
                 tasks[index].status = newStatus;
                 localStorage.setItem('tasks', JSON.stringify(tasks));
 
-                // Reload the tables to reflect the updated status
-                const ongoingTable = document.getElementById('ongoingRequestsTable').getElementsByTagName('tbody')[0];
-                const completedTable = document.getElementById('completedRequestsTable').getElementsByTagName('tbody')[0];
-                ongoingTable.innerHTML = '';
-                completedTable.innerHTML = '';
-
-                tasks.forEach((task, i) => {
-                    if (task.status === 'complete') {
-                        addTaskToTable('completedRequestsTable', i, task);
-                    } else {
-                        addTaskToTable('ongoingRequestsTable', i, task);
-                    }
-                });
+                // Reload the table
+                loadTasks();
             } else {
                 alert("Invalid status. Please enter one of the following: sent, received, in-progress, complete.");
             }
