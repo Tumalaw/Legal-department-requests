@@ -37,7 +37,7 @@
             margin-bottom: 20px;
         }
         .logo img {
-            max-width: 200px; /* Adjust this value to resize the logo */
+            max-width: 200px;
         }
         .section-title {
             margin-top: 40px;
@@ -49,6 +49,15 @@
             padding: 10px;
             border-radius: 4px;
             margin-bottom: 20px;
+        }
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            table, th, td {
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
@@ -66,24 +75,28 @@
                 <label for="requestor" class="block">Requestor's Name:</label>
                 <input type="text" id="requestor" class="border rounded w-full p-2" required>
             </div>
-           <div class="mb-4">
-    <label for="actionType" class="block">Type of Action Requested:</label>
-    <select id="actionType" class="border rounded w-full p-2" required>
-        <option value="">Select Action Type</option>
-        <option value="Contract Review">Contract Review</option>
-        <option value="Litigation">Litigation</option>
-        <option value="Legal Advice">Legal Advice</option>
-        <option value="Draft a Letter">Draft a Letter</option>
-        <option value="Received a Claim of Lien">Received a Claim of Lien</option>
-        <option value="File a Claim of Lien">File a Claim of Lien</option>
-        <option value="Draft a Notice of Termination">Draft a Notice of Termination</option>
-        <option value="Draft a Contract">Draft a Contract</option>
-        <option value="Amend a Contract">Amend a Contract</option>
-        <option value="Research">Research</option>
-        <option value="New Project">New Project</option>
-        <option value="Would like a Phone Conference">Would like a Phone Conference</option>
-        <option value="Would like an Office Conference">Would like an Office Conference</option>
+            <div class="mb-4">
+                <label for="actionType" class="block">Type of Action Requested:</label>
+                <select id="actionType" class="border rounded w-full p-2" required>
+                    <option value="">Select Action Type</option>
+                    <option value="Contract Review">Contract Review</option>
+                    <option value="Litigation">Litigation</option>
+                    <option value="Legal Advice">Legal Advice</option>
+                    <option value="Draft a Letter">Draft a Letter</option>
+                    <option value="Received a Claim of Lien">Received a Claim of Lien</option>
+                    <option value="File a Claim of Lien">File a Claim of Lien</option>
+                    <option value="Draft a Notice of Termination">Draft a Notice of Termination</option>
+                    <option value="Draft a Contract">Draft a Contract</option>
+                    <option value="Amend a Contract">Amend a Contract</option>
+                    <option value="Research">Research</option>
+                    <option value="New Project">New Project</option>
+                    <option value="Would like a Phone Conference">Would like a Phone Conference</option>
+                    <option value="Would like an Office Conference">Would like an Office Conference</option>
                 </select>
+            </div>
+            <div class="mb-4">
+                <label for="details" class="block">Details:</label>
+                <textarea id="details" class="border rounded w-full p-2" rows="4" placeholder="Provide additional details here..."></textarea>
             </div>
             <div class="mb-4">
                 <label for="requestDate" class="block">Request Date:</label>
@@ -123,11 +136,13 @@
                     <tr>
                         <th>Requestor</th>
                         <th>Action Requested</th>
+                        <th>Details</th>
                         <th>Request Date</th>
                         <th>Due Date</th>
                         <th>Response Time</th>
                         <th>Status</th>
                         <th>Request Timestamp</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -143,11 +158,13 @@
                     <tr>
                         <th>Requestor</th>
                         <th>Action Requested</th>
+                        <th>Details</th>
                         <th>Request Date</th>
                         <th>Due Date</th>
                         <th>Response Time</th>
                         <th>Status</th>
                         <th>Request Timestamp</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -163,6 +180,7 @@
 
             const requestor = document.getElementById('requestor').value;
             const actionType = document.getElementById('actionType').value;
+            const details = document.getElementById('details').value;
             const requestDate = document.getElementById('requestDate').value;
             const dueDate = document.getElementById('dueDate').value;
             const responseTime = document.getElementById('responseTime').value;
@@ -174,14 +192,14 @@
 
             // Store task in local storage
             let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-            tasks.push({ requestor, actionType, requestDate, dueDate, responseTime, status, timestamp });
+            tasks.push({ requestor, actionType, details, requestDate, dueDate, responseTime, status, timestamp });
             localStorage.setItem('tasks', JSON.stringify(tasks));
 
             // Add task to the appropriate table based on status
             if (status === 'complete') {
-                addTaskToTable('completedRequestsTable', tasks.length - 1, { requestor, actionType, requestDate, dueDate, responseTime, status, timestamp });
+                addTaskToTable('completedRequestsTable', tasks.length - 1, { requestor, actionType, details, requestDate, dueDate, responseTime, status, timestamp });
             } else {
-                addTaskToTable('ongoingRequestsTable', tasks.length - 1, { requestor, actionType, requestDate, dueDate, responseTime, status, timestamp });
+                addTaskToTable('ongoingRequestsTable', tasks.length - 1, { requestor, actionType, details, requestDate, dueDate, responseTime, status, timestamp });
             }
 
             this.reset(); // Clear the form after submission
@@ -210,12 +228,84 @@
             newRow.innerHTML = `
                 <td>${task.requestor}</td>
                 <td>${task.actionType}</td>
+                <td>${task.details}</td>
                 <td>${task.requestDate}</td>
                 <td>${task.dueDate}</td>
                 <td>${task.responseTime}</td>
                 <td>${task.status}</td>
                 <td>${task.timestamp}</td>
+                <td>
+                    <button onclick="editTask(${index})" class="bg-yellow-500 text-white rounded p-1">Edit</button>
+                    <button onclick="deleteTask(${index})" class="bg-red-500 text-white rounded p-1">Delete</button>
+                    <button onclick="updateStatus(${index})" class="bg-blue-500 text-white rounded p-1">Update Status</button>
+                </td>
             `;
+        }
+
+        // Edit task function
+        function editTask(index) {
+            const tasks = JSON.parse(localStorage.getItem('tasks'));
+            const task = tasks[index];
+
+            document.getElementById('requestor').value = task.requestor;
+            document.getElementById('actionType').value = task.actionType;
+            document.getElementById('details').value = task.details;
+            document.getElementById('requestDate').value = task.requestDate;
+            document.getElementById('dueDate').value = task.dueDate;
+            document.getElementById('responseTime').value = task.responseTime;
+            document.getElementById('status').value = task.status;
+
+            // Remove the task from the array and update local storage
+            tasks.splice(index, 1);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+
+            // Remove the task from the table
+            const table = document.getElementById('taskTable').getElementsByTagName('tbody')[0];
+            table.deleteRow(index);
+        }
+
+        // Delete task function
+        function deleteTask(index) {
+            let tasks = JSON.parse(localStorage.getItem('tasks'));
+
+            // Remove the task from the array and update local storage
+            tasks.splice(index, 1);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+
+            // Remove the task from the table
+            const table = document.getElementById('taskTable').getElementsByTagName('tbody')[0];
+            table.deleteRow(index);
+
+            // Reload the table to update the row indexes
+            table.innerHTML = '';
+            tasks.forEach((task, i) => addTaskToTable(i, task));
+        }
+
+        // Update status function
+        function updateStatus(index) {
+            const tasks = JSON.parse(localStorage.getItem('tasks'));
+            const newStatus = prompt("Update the status (sent, received, in-progress, complete):", tasks[index].status);
+
+            if (newStatus && ['sent', 'received', 'in-progress', 'complete'].includes(newStatus.toLowerCase())) {
+                tasks[index].status = newStatus;
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+
+                // Reload the tables to reflect the updated status
+                const ongoingTable = document.getElementById('ongoingRequestsTable').getElementsByTagName('tbody')[0];
+                const completedTable = document.getElementById('completedRequestsTable').getElementsByTagName('tbody')[0];
+                ongoingTable.innerHTML = '';
+                completedTable.innerHTML = '';
+
+                tasks.forEach((task, i) => {
+                    if (task.status === 'complete') {
+                        addTaskToTable('completedRequestsTable', i, task);
+                    } else {
+                        addTaskToTable('ongoingRequestsTable', i, task);
+                    }
+                });
+            } else {
+                alert("Invalid status. Please enter one of the following: sent, received, in-progress, complete.");
+            }
         }
     </script>
 </body>
